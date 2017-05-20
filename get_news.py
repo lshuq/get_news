@@ -8,7 +8,7 @@ import os
 # 获取微信公众号新闻
 
 def get_access():
-    return webdriver.Firefox()
+    return webdriver.PhantomJS()
 
 
 def search_page(driver, url):
@@ -90,9 +90,10 @@ def get_news(news_urls):
             image = download_page(img)
             with open("news/%s/%s.jpg" % (num, index), 'wb') as fp:
                 fp.write(image)
-                print("正在下载第%s张图片" % index)
                 index += 1
         num += 1
+    print("Done")
+    return
 
 
 def initial():
@@ -102,7 +103,7 @@ def initial():
     true_url = next_page(html_url)
     news_urls = get_news_urls(load_page(web_look, true_url))
     get_news(news_urls)
-
+    web_look.quit()
 
 if __name__ == '__main__':
     initial()
