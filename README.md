@@ -1,2 +1,3 @@
 #get_newsToWord
-抓取新闻并保存到word文档
+
+get news and save as word file
