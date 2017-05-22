@@ -13,12 +13,10 @@ def get_access():
 
 def search_page(driver, url):
     driver.get(url)
-    print(driver.current_url)
     elem = driver.find_element_by_class_name("query")
     elem.send_keys(u"国际农业航空施药技术联合实验室")
     btn = driver.find_element_by_class_name("swz2")
     btn.click()
-    print(driver.current_url)
     time.sleep(1)
     page = driver.page_source
     return page
@@ -31,7 +29,7 @@ def load_page(driver, url):
 
 
 def next_page(page):
-    soup = BeautifulSoup(page, "html5lib")
+    soup = BeautifulSoup(page, "html.parser")
     link = soup.find('div', attrs={"class": "img-box"})
     link_to = link.find('a')
     return link_to.attrs['href']
@@ -42,7 +40,7 @@ def get_news_urls(page):
     # 存储新闻页面的列表
     # news_urls = {}
     news_urls = []
-    soup = BeautifulSoup(page, "html5lib")
+    soup = BeautifulSoup(page, "html.parser")
     # 新闻列表
     news_list = soup.find_all('h4', attrs={'class': 'weui_media_title'})
     # 全部新闻标题
@@ -66,32 +64,60 @@ def download_page(url):
 def get_imgs_url(url):
     images = []
     page = urllib.request.urlopen(url)
-    soup = BeautifulSoup(page, "html5lib")
+    soup = BeautifulSoup(page, "html.parser")
     imgs = soup.find_all('img')
     for img in imgs:
         try:
             images.append(img.attrs['data-src'])
         except:
             pass
+    with open("test.html", "wb") as fp:
+        fp.write(soup.encode())
+    print("get_imgs_url done")
     return images
 
 
+def news_save(soup, img_src, path):
+    for script in soup.findAll('script'):
+        script.extract()
+    # for style in soup.findAll('style'):
+    #     style.extract()
+    title = soup.find("h2", attrs={'class': "rich_media_title"}).get_text()
+    title = title.strip()
+    imgs = soup.find_all('img')
+    index = 1
+    for img in imgs:
+        try:
+            if img['data-src'] is not None:
+                img['src'] = index
+                index += 1
+        except:
+            pass
+    with open(path + "/" + title + ".html", "wb") as fp:
+        fp.write(soup.encode())
+    print(title + "***\tDone")
+
+
 def get_news(news_urls):
-    num = 1
     for url in news_urls:
-        # html = urllib.request.urlopen(news_urls[url]).read()
-        html = download_page(url)
-        with open("news/%s/%s.html" % (num, num), "wb") as fp:
-            fp.write(html)
+        img_src = []
         index = 1
         imgs = get_imgs_url(url)
+        page = urllib.request.urlopen(url)
+        soup = BeautifulSoup(page, "html.parser")
+        head = soup.find('div', attrs={'class': 'rich_media_meta_list'})
+        date = head.find('em').get_text()
+        path = "news/" + date
+        if os.path.exists(path) is False:
+            os.makedirs(path)
         for img in imgs:
             # 将每个img链接重新解析
             image = download_page(img)
-            with open("news/%s/%s.jpg" % (num, index), 'wb') as fp:
+            with open(path + "/" + str(index), 'wb') as fp:
                 fp.write(image)
+                img_src.append(path)
                 index += 1
-        num += 1
+        news_save(soup, img_src, path)
     print("Done")
     return
 
@@ -102,8 +128,9 @@ def initial():
     html_url = search_page(web_look, html_url)
     true_url = next_page(html_url)
     news_urls = get_news_urls(load_page(web_look, true_url))
-    get_news(news_urls)
     web_look.quit()
+    get_news(news_urls)
+
 
 if __name__ == '__main__':
     initial()
