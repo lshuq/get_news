@@ -77,7 +77,7 @@ def get_imgs_url(url):
     return images
 
 
-def news_save(soup, img_src, path):
+def news_save(soup, img_src, html_path):
     for script in soup.findAll('script'):
         script.extract()
     # for style in soup.findAll('style'):
@@ -85,15 +85,15 @@ def news_save(soup, img_src, path):
     title = soup.find("h2", attrs={'class': "rich_media_title"}).get_text()
     title = title.strip()
     imgs = soup.find_all('img')
-    index = 1
+    index = 0
     for img in imgs:
         try:
             if img['data-src'] is not None:
-                img['src'] = index
+                img['src'] = "../../" + img_src[index]
                 index += 1
         except:
             pass
-    with open(path + "/" + title + ".html", "wb") as fp:
+    with open(html_path + title + ".html", "wb") as fp:
         fp.write(soup.encode())
     print(title + "***\tDone")
 
@@ -107,17 +107,22 @@ def get_news(news_urls):
         soup = BeautifulSoup(page, "html.parser")
         head = soup.find('div', attrs={'class': 'rich_media_meta_list'})
         date = head.find('em').get_text()
-        path = "news/" + date
-        if os.path.exists(path) is False:
-            os.makedirs(path)
+        path = "news/"
+        img_path = "news/images/" + date + "/"
+        html_path = "news/html/" + date + "/"
+        if os.path.exists(html_path) is False:
+            os.makedirs(html_path)
+        if os.path.exists(img_path) is False:
+            os.makedirs(img_path)
         for img in imgs:
             # 将每个img链接重新解析
             image = download_page(img)
-            with open(path + "/" + str(index), 'wb') as fp:
+            img_path = "images/" + date + "/" + str(index)
+            with open(path + img_path, 'wb') as fp:
                 fp.write(image)
-                img_src.append(path)
+                img_src.append(img_path)
                 index += 1
-        news_save(soup, img_src, path)
+        news_save(soup, img_src, html_path)
     print("Done")
     return
 
