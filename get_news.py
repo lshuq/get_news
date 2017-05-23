@@ -8,7 +8,7 @@ import os
 # 获取微信公众号新闻
 
 def get_access():
-    return webdriver.PhantomJS()
+    return webdriver.Firefox()
 
 
 def search_page(driver, url):
@@ -89,11 +89,11 @@ def news_save(soup, img_src, html_path):
     for img in imgs:
         try:
             if img['data-src'] is not None:
-                img['src'] = "../../" + img_src[index]
+                img['src'] = "../" + img_src[index]
                 index += 1
         except:
             pass
-    with open(html_path + title + ".html", "wb") as fp:
+    with open(html_path + ".html", "wb") as fp:
         fp.write(soup.encode())
     print(title + "***\tDone")
 
@@ -109,7 +109,7 @@ def get_news(news_urls):
         date = head.find('em').get_text()
         path = "news/"
         img_path = "news/images/" + date + "/"
-        html_path = "news/html/" + date + "/"
+        html_path = "news/html/" + date
         if os.path.exists(html_path) is False:
             os.makedirs(html_path)
         if os.path.exists(img_path) is False:
